@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand: #c4622d;
+  --accent: #2c5f8a;
+  --bg: #ffffff;
+  --bg-alt: #f4f6f8;
+  --text: #0f172a;
+}
+
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: "DM Sans", sans-serif; }
+h1,h2,h3,h4,h5,h6 { font-family: "Inter", sans-serif; }
