@@ -6,6 +6,28 @@ import { Phone, Mail, MapPin, Clock, CheckCircle } from "lucide-react";
 export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const data: Record<string, string> = {};
+    formData.forEach((value, key) => {
+      data[key] = value.toString();
+    });
+    // Deliver lead directly to the leads webhook (SSR Netlify form capture is unreliable).
+    try {
+      const WEBHOOK_URL = `https://josh.jam-bot.com/social-api/api/leads/webhook/netlify?tenant=josh&site=excavationcontractorinsurance.com`;
+      await fetch(WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ form_name: "contact", source: "excavationcontractorinsurance.com", ...data }),
+      });
+    } catch {
+      // lead webhook failed — do not block submission UX
+    }
+    setSubmitted(true);
+  };
+
   return (
     <>
       <section className="bg-brand py-20">
@@ -37,7 +59,7 @@ export default function ContactPage() {
                 name="contact"
                 method="POST"
                 data-netlify="true"
-                onSubmit={() => setSubmitted(true)}
+                onSubmit={handleSubmit}
                 className="mt-8 space-y-5"
               >
                 <input type="hidden" name="form-name" value="contact" />

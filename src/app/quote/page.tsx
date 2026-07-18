@@ -30,7 +30,7 @@ function encode(data: Record<string, string>) {
 export default function QuotePage() {
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     const formData = new FormData(form);
@@ -38,6 +38,17 @@ export default function QuotePage() {
     formData.forEach((value, key) => {
       data[key] = value.toString();
     });
+    // Deliver lead directly to the leads webhook (SSR Netlify form capture is unreliable).
+    try {
+      const WEBHOOK_URL = `https://josh.jam-bot.com/social-api/api/leads/webhook/netlify?tenant=josh&site=excavationcontractorinsurance.com`;
+      await fetch(WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ form_name: "quote", source: "excavationcontractorinsurance.com", ...data }),
+      });
+    } catch {
+      // lead webhook failed — do not block submission UX
+    }
     fetch("/", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
