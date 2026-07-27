@@ -49,7 +49,7 @@ export default function QuotePage() {
     } catch {
       // lead webhook failed — do not block submission UX
     }
-    fetch("/", {
+    fetch('/__forms.html', {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: encode({ "form-name": "quote", ...data }),
