@@ -262,37 +262,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="bg-white py-20 sm:py-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <Reveal className="mx-auto max-w-3xl text-center">
-            <h2 className="font-sans text-3xl font-bold text-slate-900 sm:text-4xl">
-              Trusted by Excavation Contractors
-            </h2>
-          </Reveal>
-          <div className="mt-14 grid gap-6 md:grid-cols-3">
-            {testimonials.map((t, i) => (
-              <Reveal key={t.name} delay={i * 0.06}>
-                <figure className="flex h-full flex-col rounded-xl border border-slate-200 bg-[#f4f6f8] p-7">
-                  <div className="flex gap-1 text-brand">
-                    {Array.from({ length: 5 }).map((_, j) => (
-                      <Star key={j} className="h-5 w-5 fill-current" />
-                    ))}
-                  </div>
-                  <blockquote className="mt-4 flex-1 text-base leading-relaxed text-slate-700">
-                    &ldquo;{t.quote}&rdquo;
-                  </blockquote>
-                  <figcaption className="mt-5">
-                    <div className="font-sans font-bold text-slate-900">{t.name}</div>
-                    <div className="text-sm text-slate-500">{t.role}</div>
-                  </figcaption>
-                </figure>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* FAQ */}
       <section className="bg-[#f4f6f8] py-20 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
