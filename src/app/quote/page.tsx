@@ -29,6 +29,7 @@ function encode(data: Record<string, string>) {
 
 export default function QuotePage() {
   const [submitted, setSubmitted] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -38,24 +39,31 @@ export default function QuotePage() {
     formData.forEach((value, key) => {
       data[key] = value.toString();
     });
-    // Deliver lead directly to the leads webhook (SSR Netlify form capture is unreliable).
+    // A lead is captured if a delivery channel ACCEPTED it. fetch() does not reject on a
+    // 4xx/5xx, so each response status has to be inspected explicitly. Both arms of the
+    // old code called setSubmitted(true), so the confirmation appeared either way.
+    let captured = false;
     try {
       const WEBHOOK_URL = `https://josh.jam-bot.com/social-api/api/leads/webhook/netlify?tenant=josh&site=excavationcontractorinsurance.com`;
-      await fetch(WEBHOOK_URL, {
+      const res = await fetch(WEBHOOK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ form_name: "quote", source: "excavationcontractorinsurance.com", ...data }),
       });
+      if (res.ok) captured = true;
     } catch {
-      // lead webhook failed — do not block submission UX
+      // lead webhook failed — the Netlify Forms post below may still capture it
     }
-    fetch('/__forms.html', {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: encode({ "form-name": "quote", ...data }),
-    })
-      .then(() => setSubmitted(true))
-      .catch(() => setSubmitted(true));
+    try {
+      const res = await fetch('/__forms.html', {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: encode({ "form-name": "quote", ...data }),
+      });
+      if (res.ok) captured = true;
+    } catch {}
+    setFailed(!captured);
+    setSubmitted(captured);
   };
 
   return (
@@ -178,6 +186,14 @@ export default function QuotePage() {
                     className="mt-1.5 w-full rounded-md border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
                   />
                 </div>
+
+                {failed && (
+                  <div role="alert" className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+                    That did not send &mdash; your details are still here, nothing was lost. Please
+                    try again, or call us at{" "}
+                    <a href="tel:8449675247" className="font-semibold underline">844-967-5247</a>.
+                  </div>
+                )}
 
                 <button
                   type="submit"
