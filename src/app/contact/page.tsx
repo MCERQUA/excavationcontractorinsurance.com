@@ -5,6 +5,7 @@ import { Phone, Mail, MapPin, Clock, CheckCircle } from "lucide-react";
 
 export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -15,16 +16,21 @@ export default function ContactPage() {
       data[key] = value.toString();
     });
     // Deliver lead directly to the leads webhook (SSR Netlify form capture is unreliable).
+    // This is the only delivery channel, so the confirmation is shown only when the webhook
+    // actually accepted the lead. fetch() does not reject on a 4xx/5xx — check the status.
     try {
       const WEBHOOK_URL = `https://josh.jam-bot.com/social-api/api/leads/webhook/netlify?tenant=josh&site=excavationcontractorinsurance.com`;
-      await fetch(WEBHOOK_URL, {
+      const res = await fetch(WEBHOOK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ form_name: "contact", source: "excavationcontractorinsurance.com", ...data }),
       });
+      if (!res.ok) throw new Error(String(res.status));
     } catch {
-      // lead webhook failed — do not block submission UX
+      setFailed(true);
+      return;
     }
+    setFailed(false);
     setSubmitted(true);
   };
 
@@ -108,6 +114,13 @@ export default function ContactPage() {
                     className="mt-1.5 w-full rounded-md border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
                   />
                 </div>
+                {failed && (
+                  <div role="alert" className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+                    That did not send — your message is still here, nothing was lost. Please try
+                    again, or call us at{" "}
+                    <a href="tel:8449675247" className="font-semibold underline">844-967-5247</a>.
+                  </div>
+                )}
                 <button
                   type="submit"
                   className="w-full rounded-md bg-brand px-6 py-3.5 text-base font-bold text-white transition-colors hover:bg-brand-dark"
