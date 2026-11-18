@@ -1,12 +1,20 @@
 import type { Metadata } from "next";
-import { Inter, DM_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import LenisProvider from "@/components/lenis-provider";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
-const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans", display: "swap" });
+const inter = localFont({
+  src: [{ path: "./fonts/Inter-variable.woff2", weight: "100 900", style: "normal" }],
+  variable: "--font-inter",
+  display: "swap",
+});
+const dmSans = localFont({
+  src: [{ path: "./fonts/DMSans-variable.woff2", weight: "100 1000", style: "normal" }],
+  variable: "--font-dm-sans",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://excavationcontractorinsurance.com"),

@@ -7,7 +7,7 @@ const config: Config = {
         brand: { DEFAULT: "#c4622d", dark: "#a0491f", light: "#e07a4a" },
         accent: { DEFAULT: "#2c5f8a", dark: "#1e4466", light: "#4a7da8" },
       },
-      fontFamily: { sans: ["Inter", "sans-serif"], body: ["DM Sans", "sans-serif"] },
+      fontFamily: { sans: ["Inter", "sans-serif"], body: ["'dmSans'", "sans-serif"] },
     },
   },
   plugins: [],
