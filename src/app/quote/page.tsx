@@ -50,18 +50,25 @@ export default function QuotePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ form_name: "quote", source: "excavationcontractorinsurance.com", ...data }),
       });
-      if (res.ok) captured = true;
+      // The leads webhook answers 200 {ok:true,stored:false} when it drops a body, so a 2xx alone is not
+      // acceptance: require ok:true and stored!==false (an unparseable body counts as a failure).
+      if (res.ok) {
+        const j = await res.json().catch(() => null);
+        if (j && j.ok === true && j.stored !== false) captured = true;
+      }
     } catch {
       // lead webhook failed — the Netlify Forms post below may still capture it
     }
-    try {
-      const res = await fetch('/__forms.html', {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: encode({ "form-name": "quote", ...data }),
-      });
-      if (res.ok) captured = true;
-    } catch {}
+    if (!captured) {
+      try {
+        const res = await fetch('/__forms.html', {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: encode({ "form-name": "quote", ...data }),
+        });
+        if (res.ok) captured = true;
+      } catch {}
+    }
     setFailed(!captured);
     setSubmitted(captured);
   };

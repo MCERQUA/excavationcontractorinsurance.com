@@ -15,9 +15,9 @@ export default function ContactPage() {
     formData.forEach((value, key) => {
       data[key] = value.toString();
     });
-    // Deliver lead directly to the leads webhook (SSR Netlify form capture is unreliable).
-    // This is the only delivery channel, so the confirmation is shown only when the webhook
-    // actually accepted the lead. fetch() does not reject on a 4xx/5xx — check the status.
+    // Deliver lead to the leads webhook first; if it does not confirm storage, fall back to the
+    // registered Netlify Forms path. The confirmation is shown only if one channel accepted the lead.
+    let captured = false;
     try {
       const WEBHOOK_URL = `https://josh.jam-bot.com/social-api/api/leads/webhook/netlify?tenant=josh&site=excavationcontractorinsurance.com`;
       const res = await fetch(WEBHOOK_URL, {
@@ -25,8 +25,28 @@ export default function ContactPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ form_name: "contact", source: "excavationcontractorinsurance.com", ...data }),
       });
-      if (!res.ok) throw new Error(String(res.status));
+      // The leads webhook answers 200 {ok:true,stored:false} when it drops a body, so a 2xx alone is not
+      // acceptance: require ok:true and stored!==false (an unparseable body counts as a failure).
+      if (res.ok) {
+        const j = await res.json().catch(() => null);
+        if (j && j.ok === true && j.stored !== false) captured = true;
+      }
     } catch {
+      // webhook failed — fall through to the Netlify Forms fallback
+    }
+    if (!captured) {
+      try {
+        const res = await fetch("/__forms.html", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ "form-name": "contact", ...data }).toString(),
+        });
+        captured = res.ok;
+      } catch {
+        // both channels failed
+      }
+    }
+    if (!captured) {
       setFailed(true);
       return;
     }
